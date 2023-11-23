@@ -16,8 +16,14 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-// in separate terminal type curl http://localhost:8080/urls.json to see JSON representation of the 'urlDatabase'
+// in separate terminal or browser type curl http://localhost:8080/urls.json to see JSON representation of the 'urlDatabase'
+// or /hello to see hello world (world in bold)
+// curl -i http://localhost:8080/hello to see the response headers (one on each line), followed by the HTML content that the /hello path responds with: <html><body>Hello <b>World</b></body></html>
