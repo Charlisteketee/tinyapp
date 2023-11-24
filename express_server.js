@@ -16,6 +16,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
@@ -27,13 +31,40 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`); // Redirect to the dynamically generated id page
 });
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+// Add a POST route to handle deletion of a URL 
+app.post("/urls/:id/delete", (req, res) => {
+  const urlToDelete = req.params.id;
+  delete urlDatabase[urlToDelete]; 
+
+  res.redirect("/urls/");
 });
 
+app.post("/urls/:id/update", (req, res) => {
+  console.log("POST request received for updating URL");
+  const urlToUpdate = req.params.id;
+  const newLongURL = req.body.updatedLongURL;
+
+  console.log("Updating URL:", urlToUpdate);
+  console.log("New Long URL:", newLongURL);
+
+  // Update the value of the stored long URL
+  urlDatabase[urlToUpdate] = newLongURL;
+
+  console.log("Redirecting to:", `/urls/${urlToUpdate}`);
+  res.redirect("/urls");
+});
+
+
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: req.body.longURL };
-  res.render("urls_show", templateVars);
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL];
+
+  if (longURL) {
+    const templateVars = { id: shortURL, longURL: longURL };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(404).send("URL not found");
+  }
 });
 
 app.get("/u/:id", (req, res) => {

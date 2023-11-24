@@ -21,10 +21,32 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
-        <a href="#">Create a new URL</a>
-      </div>
+        <div class="card-body">
+          <h5 class="card-title edit-title">Edit</h5>
+        
+          <!-- Form for updating the long URL -->
+<form method="POST" action="/urls/<%= id %>/update">
+  <label for="updatedLongURL">New URL:</label>
+  <input type="text" id="updatedLongURL" name="updatedLongURL" required>
+  <button type="submit">Update URL</button>
+</form>
+        </div>
+  
+          <style>
+            .edit-title {
+              font-size: 2em; /* Adjust the font size as needed */
+              color: #757474; /* Lighter shade color */
+            }
+          
+            .new-url-title {
+              font-size: 1.2em; /* Adjust the font size as needed */
+              color: #928d8d; /* Lighter shade color */
+            }
+          </style>
+        </form>
       <div class="card-footer text-muted"></div>
     </div>
+     
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
