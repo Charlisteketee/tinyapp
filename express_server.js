@@ -22,9 +22,9 @@ app.post("/urls", (req, res) => {
 
   // Store randomly generated short URL in urlDatabase
   urlDatabase[shortURL] = longURL;
-  
+
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${shortURL}`); // Redirect to the dynamically generated id page
 });
 
 app.get("/urls/new", (req, res) => {
@@ -34,6 +34,17 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: req.body.longURL };
   res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL];
+
+  if (longURL) {
+    res.redirect(longURL); // red.redirect sends a 302 Found status code
+  } else {
+    res.status(404).send("URL not found"); // Handles client requests for a non-existant id
+  }
 });
 
 app.get("/urls.json", (req, res) => {
