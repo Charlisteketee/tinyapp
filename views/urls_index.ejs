@@ -39,13 +39,10 @@
               <td>
               
                 <!-- Edit link -->
-                <td>
-                  <a class="btn btn-outline-primary" href="/urls/<%= id %>">Edit</a>
-                </td>
-            </form>
-          </td>
-          <td>
-                <!-- Add a delete button -->
+                <a class="btn btn-outline-primary" href="/urls/<%= id %>">Edit</a>
+              </td>
+              <td>
+                <!-- Delete button -->
                 <form method="POST" action="/urls/<%= id %>/delete">
                   <button type="submit" class="btn btn-outline-danger">Delete</button>
                 </form>
