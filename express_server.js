@@ -7,6 +7,8 @@ app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 
+app.use(cookieParser());
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -34,6 +36,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -45,6 +48,12 @@ app.post("/login", (req, res) => {
   // Set a cookie with the username
   res.cookie("username", username);
 
+  res.redirect("/urls");
+});
+
+// Add a POST route to handle Logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("username"); // clears the username cookie
   res.redirect("/urls");
 });
 
