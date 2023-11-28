@@ -1,99 +1,189 @@
 const express = require("express");
+const morgan = require('morgan');
+const cookieParser = require("cookie-parser");
+
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require("cookie-parser");
-app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
+// Configuration
+app.set("view engine", "ejs");
+
+// Middleware
+app.use(morgan("dev"));
+app.use(express.urlencoded({ extended: true })); // creates and populates req.body
+app.use(cookieParser()); // creates and populates req.cookies
+
+
+// Databases
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-// Users database
 const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+  abc: {
+    id: "abc",
+    email: "a@a.com",
+    password: "1234",
   },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
+  def: {
+    id: "def",
+    email: "b@b.com",
+    password: "5678",
   },
+};
+
+// Helpers
+const findUserWithEmail = (email) => {
+  for (const userID in users) {
+    const user = users[userID];
+
+    if (user.email === email) {
+      return user;
+    }
+  }
+
+  return null;
 };
 
 // Function to generate random ID's for URLS and users
 function generateRandomString() {
-  const length = 6;
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
+  const id = Math.random().toString(36).substring(2, 5);
+  return id;
 };
 
+/* Function to get the user ID based on email and password
+function getUserIDFromDatabase(email, password) {
+  // Simulate querying the database for a user with the provided email
+  const user = Object.values(users).find(user => user.email === email);
+  // Check if the user is found and the password is correct
+  if (user && user.password === password) {
+    return user.id;
+  }
+  // Return null if the user is not found or the password is incorrect
+  return null;
+};
+*/
 
 app.get("/urls", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
   const templateVars = { 
-    username: req.cookies["username"],
+    user: users[userID],
     urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
 });
 
-app.get("/register", (req, res) => {
+app.get("/urls", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
   const templateVars = { 
-    username: req.cookies["username"],
+    user: users[userID],
+    urls: urlDatabase,
+  };
+  res.render("urls_show", templateVars);
+});
+
+// Registration page 
+app.get("/register", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  const templateVars = { 
+    id: req.params.id,
+    user: users[userID], // Looks up the user object in the users object using the userID
+    urls: urlDatabase,
   };
   res.render("urls_registration", templateVars);
+});  
+
+
+// POST route to handle registration
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // did they NOT give us an email or password
+  if (!email || !password) {
+    return res.status(400).send("Please provide an email and password");
+  }
+
+  const foundUser = findUserWithEmail(email);
+
+  // did we find an existing user
+  if (foundUser) {
+    return res.status(400).send("A user with that email already exists");
+  }
+
+  // the email is unique! create a new user object
+  const userID = generateRandomString;
+  const user = {
+    id: userID,
+    email: email,
+    password: password,
+  };
+ 
+ // Store randomly generated userID in users database
+ users[userID] = user;
+ // Set a cookie with the userID
+ res.cookie("userID", userID);
+ res.redirect("/urls");
 });
 
 app.get("/urls/new", (req, res) => {
+  const user = users[req.cookies.userID];
   const templateVars = { 
-    username: req.cookies["username"],
+    user: user,
+    urls: urlDatabase,
   };
   res.render("urls_new", templateVars);
 });
 
-
-// Add a POST route to handle registration
-app.post("/register", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  // generate random user ID
-  const userID = generateRandomString();
-  // Create a new user object
-  const newUser = {
-    id: userID,
-    email: email,
-    password: password
+app.get("/login", (req, res) => {
+  const user = users[req.cookies.userID];
+  const templateVars = { 
+    user: user,
+    urls: urlDatabase,
   };
- // Store randomly generated userID in users database
- users[userID] = newUser;
- // Set a cookie with the userID
- res.cookie("user_ID", userID);
- res.redirect("/urls");
+  res.render("urls_login", templateVars);
 });
 
-// Add a POST route to handle login 
+
+// GET / login
+app.get('/login', (req, res) => {
+  res.render('urls_login');
+});
+
+
+// POST / login 
 app.post("/login", (req, res) => {
-  console.log(req.body); // Log the request body to the console
+  const email = req.body.email;
+  const password = req.body.password;
+  const foundUser = findUserWithEmail(email); // Replace with your authentication logic
 
-  const username = req.body.username;
+  // did NOT give us an email or password
+  if (!email || !password) {
+    return res.status(400).send("Please provide an email and password");
+  }
 
-  // Set a cookie with the username
-  res.cookie("username", username);
+  // did NOT find a user
+  if (!foundUser) {
+    return res.status(400).send("No user with that email found");
+  }
 
-  res.redirect("/urls");
+  // username and password does NOT match
+  if (foundUser.password !== password) {
+    return res.status(400).send("Passwords do not match");
+  }
+
+  // The HAPPY PATH - user is who they say they are
+
+  // Set a cookie with the userID
+  res.cookie("userID", foundUser.userID);
+
+  res.redirect("/urls"); // WHERE ARE WE GOING AFTER LOGGING IN??
 });
 
 // Add a POST route to handle Logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("username"); // clears the username cookie
+  res.clearCookie("userID"); // clears the userID cookie
   res.redirect("/urls");
 });
 
