@@ -83,7 +83,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// Registration page 
 app.get("/register", (req, res) => {
   let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
   const templateVars = { 
@@ -94,8 +93,27 @@ app.get("/register", (req, res) => {
   res.render("urls_registration", templateVars);
 });  
 
+app.get("/urls/new", (req, res) => {
+  const user = users[req.cookies.userID];
+  const templateVars = { 
+    user: user,
+    urls: urlDatabase,
+  };
+  res.render("urls_new", templateVars);
+});
 
-// POST route to handle registration
+app.get("/login", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  const templateVars = { 
+    id: req.params.id,
+    user: users[userID], // Looks up the user object in the users object using the userID
+    urls: urlDatabase,
+  };
+  res.render("urls_login", templateVars);
+});
+
+
+// POST / registration
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -113,7 +131,8 @@ app.post("/register", (req, res) => {
   }
 
   // the email is unique! create a new user object
-  const userID = generateRandomString;
+  const userID = generateRandomString();
+
   const user = {
     id: userID,
     email: email,
@@ -122,33 +141,12 @@ app.post("/register", (req, res) => {
  
  // Store randomly generated userID in users database
  users[userID] = user;
+
+ console.log("Accessing /register route");
+
  // Set a cookie with the userID
  res.cookie("userID", userID);
  res.redirect("/urls");
-});
-
-app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies.userID];
-  const templateVars = { 
-    user: user,
-    urls: urlDatabase,
-  };
-  res.render("urls_new", templateVars);
-});
-
-app.get("/login", (req, res) => {
-  const user = users[req.cookies.userID];
-  const templateVars = { 
-    user: user,
-    urls: urlDatabase,
-  };
-  res.render("urls_login", templateVars);
-});
-
-
-// GET / login
-app.get('/login', (req, res) => {
-  res.render('urls_login');
 });
 
 
@@ -176,18 +174,18 @@ app.post("/login", (req, res) => {
   // The HAPPY PATH - user is who they say they are
 
   // Set a cookie with the userID
-  res.cookie("userID", foundUser.userID);
+  res.cookie("userID", foundUser.id);
 
-  res.redirect("/urls"); // WHERE ARE WE GOING AFTER LOGGING IN??
+  res.redirect("/protected"); // WHERE ARE WE GOING AFTER LOGGING IN??
 });
 
-// Add a POST route to handle Logout
+// POST / Logout
 app.post("/logout", (req, res) => {
   res.clearCookie("userID"); // clears the userID cookie
   res.redirect("/urls");
 });
 
-// Add POST route to generate short URL
+// POST / generate short URL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
