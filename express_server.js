@@ -142,8 +142,6 @@ app.post("/register", (req, res) => {
  // Store randomly generated userID in users database
  users[userID] = user;
 
- console.log("Accessing /register route");
-
  // Set a cookie with the userID
  res.cookie("userID", userID);
  res.redirect("/urls");
@@ -154,21 +152,22 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const foundUser = findUserWithEmail(email); // Replace with your authentication logic
 
   // did NOT give us an email or password
   if (!email || !password) {
-    return res.status(400).send("Please provide an email and password");
+    return res.status(403).send("Please provide an email and password");
   }
+
+  const foundUser = findUserWithEmail(email); 
 
   // did NOT find a user
   if (!foundUser) {
-    return res.status(400).send("No user with that email found");
+    return res.status(403).send("No user with that email found");
   }
 
-  // username and password does NOT match
+  // email and password does NOT match
   if (foundUser.password !== password) {
-    return res.status(400).send("Passwords do not match");
+    return res.status(403).send("Passwords do not match");
   }
 
   // The HAPPY PATH - user is who they say they are
@@ -176,13 +175,13 @@ app.post("/login", (req, res) => {
   // Set a cookie with the userID
   res.cookie("userID", foundUser.id);
 
-  res.redirect("/protected"); // WHERE ARE WE GOING AFTER LOGGING IN??
+  res.redirect("/urls"); // WHERE ARE WE GOING AFTER LOGGING IN??
 });
 
 // POST / Logout
 app.post("/logout", (req, res) => {
   res.clearCookie("userID"); // clears the userID cookie
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 // POST / generate short URL

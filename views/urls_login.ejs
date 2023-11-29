@@ -21,27 +21,30 @@
   <body>
     <%- include('partials/_header') %>
 
-    <main style="margin: 1em;">
-      <h3>Login Below</h3>
-      <form class="form-inline" action="/login" method="POST">
-        <div class="form-group mb-2">
-          <label for="email">Email:</label>
-          <input
-            class="form-control"
-            type="text"
-            name="email"
-            style="width: 300px; margin: 1em"
-            required />
+      <main style="margin: 1em;">
+        <h3>Login</h3>
+        <form class="form-inline" action="/login" method="POST">
+          <div class="form-group mb-2">
+            <label for="email">Email:</label>
+            <input
+              class="form-control"
+              type="text"
+              name="email"
+              style="width: 300px; margin: 1em"
+              required />
           </div>
+          <br>
+
           <div class="form-group mb-2">
             <label for="password">Password:</label>
             <input
-            class="form-control"
-            type="text"
-            name="password"
-            style="width: 300px; margin: 1em"
-            required />
+              class="form-control"
+              type="text"
+              name="password"
+              style="width: 300px; margin: 1em"
+              required />
           </div>
+
           <button type="submit" class="btn btn-primary">Login</button>
         </form>
       </main>
