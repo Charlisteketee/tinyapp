@@ -13,7 +13,6 @@ app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true })); // creates and populates req.body
 app.use(cookieParser()); // creates and populates req.cookies
 
-
 // Databases
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -52,37 +51,7 @@ function generateRandomString() {
   return id;
 };
 
-/* Function to get the user ID based on email and password
-function getUserIDFromDatabase(email, password) {
-  // Simulate querying the database for a user with the provided email
-  const user = Object.values(users).find(user => user.email === email);
-  // Check if the user is found and the password is correct
-  if (user && user.password === password) {
-    return user.id;
-  }
-  // Return null if the user is not found or the password is incorrect
-  return null;
-};
-*/
-
-app.get("/urls", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
-  const templateVars = { 
-    user: users[userID],
-    urls: urlDatabase,
-  };
-  res.render("urls_index", templateVars);
-});
-
-app.get("/urls", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
-  const templateVars = { 
-    user: users[userID],
-    urls: urlDatabase,
-  };
-  res.render("urls_show", templateVars);
-});
-
+// GET / register
 app.get("/register", (req, res) => {
   let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
   const templateVars = { 
@@ -93,27 +62,7 @@ app.get("/register", (req, res) => {
   res.render("urls_registration", templateVars);
 });  
 
-app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies.userID];
-  const templateVars = { 
-    user: user,
-    urls: urlDatabase,
-  };
-  res.render("urls_new", templateVars);
-});
-
-app.get("/login", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
-  const templateVars = { 
-    id: req.params.id,
-    user: users[userID], // Looks up the user object in the users object using the userID
-    urls: urlDatabase,
-  };
-  res.render("urls_login", templateVars);
-});
-
-
-// POST / registration
+// POST / register
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -147,6 +96,16 @@ app.post("/register", (req, res) => {
  res.redirect("/urls");
 });
 
+// GET / login
+app.get("/login", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  const templateVars = { 
+    id: req.params.id,
+    user: users[userID], // Looks up the user object in the users object using the userID
+    urls: urlDatabase,
+  };
+  res.render("urls_login", templateVars);
+});
 
 // POST / login 
 app.post("/login", (req, res) => {
@@ -184,6 +143,36 @@ app.post("/logout", (req, res) => {
   res.redirect("/login");
 });
 
+// GET / URLS main page
+app.get("/urls", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  const templateVars = { 
+    user: users[userID],
+    urls: urlDatabase,
+  };
+  res.render("urls_index", templateVars);
+});
+
+// GET / URLS show page
+app.get("/urls", (req, res) => {
+  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  const templateVars = { 
+    user: users[userID],
+    urls: urlDatabase,
+  };
+  res.render("urls_show", templateVars);
+});
+
+// GET / new URLS
+app.get("/urls/new", (req, res) => {
+  const user = users[req.cookies.userID];
+  const templateVars = { 
+    user: user,
+    urls: urlDatabase,
+  };
+  res.render("urls_new", templateVars);
+});
+
 // POST / generate short URL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
@@ -196,7 +185,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`); // Redirect to the dynamically generated id page
 });
 
-// Add a POST route to handle deletion of a URL 
+// POST / delete URL 
 app.post("/urls/:id/delete", (req, res) => {
   const urlToDelete = req.params.id;
   delete urlDatabase[urlToDelete]; 
@@ -215,7 +204,7 @@ app.post("/urls/:id/update", (req, res) => {
   res.redirect("/urls");
 });
 
-
+// GET / URL show page
 app.get("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
@@ -233,7 +222,7 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[shortURL];
 
   if (longURL) {
-    res.redirect(longURL); // red.redirect sends a 302 Found status code
+    res.redirect(longURL); // res.redirect sends a 302 Found status code
   } else {
     res.status(404).send("URL not found"); // Handles client requests for a non-existant id
   }
