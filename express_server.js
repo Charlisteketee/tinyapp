@@ -1,19 +1,33 @@
+////////////////////////////////////////////////////////////////////////////////////
+// Requires / Packages
+///////////////////////////////////////////////////////////////////////////////////
 const express = require("express");
 const morgan = require('morgan');
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcryptjs');
 
+////////////////////////////////////////////////////////////////////////////////////
+// Variables/Set-Up
+///////////////////////////////////////////////////////////////////////////////////
 const app = express();
 const PORT = 8080; // default port 8080
+const salt = bcrypt.genSaltSync(10);
 
+////////////////////////////////////////////////////////////////////////////////////
 // Configuration
+///////////////////////////////////////////////////////////////////////////////////
 app.set("view engine", "ejs");
 
+////////////////////////////////////////////////////////////////////////////////////
 // Middleware
+///////////////////////////////////////////////////////////////////////////////////
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true })); // creates and populates req.body
 app.use(cookieParser()); // creates and populates req.cookies
 
+////////////////////////////////////////////////////////////////////////////////////
 // Databases
+///////////////////////////////////////////////////////////////////////////////////
 const urlDatabase = {
   b2xVn2: {
     longURL: "http://www.lighthouselabs.ca",
@@ -29,16 +43,18 @@ const users = {
   abc: {
     id: "abc",
     email: "a@a.com",
-    password: "1234",
+    password: bcrypt.hashSync("1234", salt),
   },
   def: {
     id: "def",
     email: "b@b.com",
-    password: "5678",
+    password: bcrypt.hashSync("5678", salt),
   },
 };
 
+////////////////////////////////////////////////////////////////////////////////////
 // Helpers
+///////////////////////////////////////////////////////////////////////////////////
 const findUserWithEmail = (email) => {
   for (const userID in users) {
     const user = users[userID];
@@ -69,6 +85,10 @@ const urlsForUser = (id) => {
 
   return userUrls;
 };
+
+////////////////////////////////////////////////////////////////////////////////////
+// Routes
+///////////////////////////////////////////////////////////////////////////////////
 
 // GET / register
 app.get("/register", (req, res) => {
@@ -107,10 +127,13 @@ app.post("/register", (req, res) => {
   // the email is unique! create a new user object
   const userID = generateRandomString();
 
+  // hash the password
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   const user = {
     id: userID,
     email: email,
-    password: password,
+    password: hashedPassword, // store hashed password
   };
  
  // Store randomly generated userID in users database
@@ -156,7 +179,8 @@ app.post("/login", (req, res) => {
   }
 
   // email and password does NOT match
-  if (foundUser.password !== password) {
+  const passwordsMatch = bcrypt.compareSync(password, foundUser.password); // makes sure it matches the encrypted password
+    if(!passwordsMatch) {
     return res.status(403).send("Passwords do not match");
   }
 
