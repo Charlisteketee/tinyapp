@@ -5,7 +5,8 @@ const express = require("express");
 const morgan = require('morgan');
 const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
+const helpers = require("./helpers");
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Variables/Set-Up
@@ -59,39 +60,6 @@ const users = {
   },
 };
 
-////////////////////////////////////////////////////////////////////////////////////
-// Helpers
-///////////////////////////////////////////////////////////////////////////////////
-const findUserWithEmail = (email) => {
-  for (const userID in users) {
-    const user = users[userID];
-
-    if (user.email === email) {
-      return user;
-    }
-  }
-
-  return null;
-};
-
-// Function to generate random ID's for URLS and users
-function generateRandomString() {
-  const id = Math.random().toString(36).substring(2, 5);
-  return id;
-};
-
-// Function to filter URLs based on userID
-const urlsForUser = (id) => {
-  const userUrls = {};
-
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      userUrls[shortURL] = urlDatabase[shortURL];
-    }
-  }
-
-  return userUrls;
-};
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Routes
@@ -124,7 +92,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Please provide an email and password");
   }
 
-  const foundUser = findUserWithEmail(email);
+  const foundUser = helpers.findUserWithEmail(email, users);
 
   // did we find an existing user
   if (foundUser) {
@@ -179,7 +147,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Please provide an email and password");
   }
 
-  const foundUser = findUserWithEmail(email); 
+  const foundUser = helpers.findUserWithEmail(email, users); 
 
   // did NOT find a user
   if (!foundUser) {
@@ -209,7 +177,7 @@ app.post("/logout", (req, res) => {
 // GET / URLS main page
 app.get("/urls", (req, res) => {
   let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
-  const userUrls = urlsForUser(userID);
+  const userUrls = helpers.urlsForUser(userID);
 
   const templateVars = { 
     user: users[userID],
@@ -237,7 +205,7 @@ app.get("/urls", (req, res) => {
 // POST / generate short URL
 app.post("/urls", (req, res) => {
   let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
-  const shortURL = generateRandomString();
+  const shortURL = helpers.generateRandomString();
   const longURL = req.body.longURL;
 
     // check if they are logged in
@@ -386,6 +354,8 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+
+module.exports = { urlDatabase, users };
 // in separate terminal or browser type curl http://localhost:8080/urls.json to see JSON representation of the 'urlDatabase'
 // or /hello to see hello world (world in bold)
 // curl -i http://localhost:8080/hello to see the response headers (one on each line), followed by the HTML content that the /hello path responds with: <html><body>Hello <b>World</b></body></html>
