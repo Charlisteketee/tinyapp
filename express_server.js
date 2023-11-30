@@ -5,6 +5,7 @@ const express = require("express");
 const morgan = require('morgan');
 const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
+const cookieSession = require('cookie-session')
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Variables/Set-Up
@@ -24,6 +25,12 @@ app.set("view engine", "ejs");
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true })); // creates and populates req.body
 app.use(cookieParser()); // creates and populates req.cookies
+app.use(cookieSession({
+  name: 'session',
+  keys: ["key1", "key2"],
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Databases
@@ -92,7 +99,7 @@ const urlsForUser = (id) => {
 
 // GET / register
 app.get("/register", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   
   // check if the user is already logged in
   if (userID) {
@@ -140,13 +147,14 @@ app.post("/register", (req, res) => {
  users[userID] = user;
 
  // Set a cookie with the userID
- res.cookie("userID", userID);
+  req.session.userID = userID; // will be encrypted
+
  res.redirect("/urls");
 });
 
 // GET / login
 app.get("/login", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   
   // check if the user is already logged in
   if (userID) {
@@ -187,20 +195,20 @@ app.post("/login", (req, res) => {
   // The HAPPY PATH - user is who they say they are
 
   // Set a cookie with the userID
-  res.cookie("userID", foundUser.id);
+  req.session.userID = foundUser.id; // will be encrypted
 
   res.redirect("/urls"); // WHERE ARE WE GOING AFTER LOGGING IN??
 });
 
 // POST / Logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("userID"); // clears the userID cookie
+  req.session = null; // clears the userID cookie
   res.redirect("/login");
 });
 
 // GET / URLS main page
 app.get("/urls", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   const userUrls = urlsForUser(userID);
 
   const templateVars = { 
@@ -213,7 +221,7 @@ app.get("/urls", (req, res) => {
 
 // GET / URLS show page CHECK THIS - ARE THERE 2??
 app.get("/urls", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   const url = urlDatabase[shortURL];
 
 
@@ -228,7 +236,7 @@ app.get("/urls", (req, res) => {
 
 // POST / generate short URL
 app.post("/urls", (req, res) => {
-  let userID = req.cookies["userID"]; // replaces the "userID" with the name of the cookie
+  let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
 
@@ -248,7 +256,7 @@ app.post("/urls", (req, res) => {
 
 // GET / new URLS
 app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies.userID];
+  const user = users[req.session.userID];
   
   // check if they are logged in
   if (!user) {
@@ -266,7 +274,7 @@ app.get("/urls/new", (req, res) => {
 // POST /urls/:id/delete
 app.post("/urls/:id/delete", (req, res) => {
   const urlToDelete = req.params.id;
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
 
   // Check if the requested URL exists
   if (!urlDatabase[urlToDelete]) {
@@ -296,7 +304,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id/update", (req, res) => {
   const urlToUpdate = req.params.id;
   const newLongURL = req.body.updatedLongURL;
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
 
   // Check if the requested URL exists
   if (!urlDatabase[urlToUpdate]) {
@@ -326,7 +334,7 @@ app.post("/urls/:id/update", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const url = urlDatabase[shortURL];
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
 
    // Check if the user is logged in
    if (!userID) {
@@ -341,9 +349,9 @@ app.get("/urls/:id", (req, res) => {
     };
 
   // Check if the URL belongs to the currently logged-in user
-  if (url.userID === req.cookies.userID) {
+  if (url.userID === req.session.userID) {
     const templateVars = {
-      user: users[req.cookies.userID], // include the logged-in user in templateVars
+      user: users[req.session.userID], // include the logged-in user in templateVars
       urls: urlDatabase,
       id: shortURL,
       longURL: url.longURL,
