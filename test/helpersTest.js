@@ -38,7 +38,6 @@ describe('findUserWithEmail', function() {
   
   it('Should return null with an invalid email', function() {
     const user = findUserWithEmail("goofie@g.com", testUsers);
-    const expectedUserID = null;
   
     // Check if user is null before accessing properties
     if (user === null) {

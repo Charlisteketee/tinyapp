@@ -1,7 +1,4 @@
-const urlDatabase = require("./express_server");
-////////////////////////////////////////////////////////////////////////////////////
-// Helpers
-///////////////////////////////////////////////////////////////////////////////////
+// Function to check if the user is in the database by their email
 const findUserWithEmail = (email, usersDatabase) => {
   for (const userID in usersDatabase) {
     const user = usersDatabase[userID];

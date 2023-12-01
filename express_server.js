@@ -82,12 +82,13 @@ app.get("/register", (req, res) => {
   res.render("urls_registration", templateVars);
 });
 
+
 // POST / register
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  // did they NOT give us an email or password
+  // if they did NOT give us an email or password
   if (!email || !password) {
     return res.status(400).send("Please provide an email and password");
   }
@@ -120,6 +121,7 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+
 // GET / login
 app.get("/login", (req, res) => {
   let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
@@ -136,6 +138,7 @@ app.get("/login", (req, res) => {
   };
   res.render("urls_login", templateVars);
 });
+
 
 // POST / login
 app.post("/login", (req, res) => {
@@ -176,6 +179,7 @@ app.post("/login", (req, res) => {
   res.redirect("/urls"); // WHERE ARE WE GOING AFTER LOGGING IN??
 });
 
+
 // POST / Logout
 app.post("/logout", (req, res) => {
   req.session = null; // clears the userID cookie
@@ -183,7 +187,8 @@ app.post("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-// GET / URLS main page
+
+// GET / urls
 app.get("/urls", (req, res) => {
   let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   const userUrls = helpers.urlsForUser(userID, urlDatabase);
@@ -196,22 +201,8 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// GET / URLS show page CHECK THIS - ARE THERE 2??
-app.get("/urls", (req, res) => {
-  let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
-  const url = urlDatabase[shortURL];
 
-
-  const templateVars = {
-    user: users[userID],
-    urls: urlDatabase[shortURL],
-    longURL: url.longURL,
-  };
-  
-  res.render("urls_show", templateVars);
-});
-
-// POST / generate short URL
+// POST / urls
 app.post("/urls", (req, res) => {
   let userID = req.session["userID"]; // replaces the "userID" with the name of the cookie
   const shortURL = helpers.generateRandomString();
@@ -231,7 +222,8 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`); // Redirect to the dynamically generated id page
 });
 
-// GET / new URLS
+
+// GET / urls/new
 app.get("/urls/new", (req, res) => {
   const user = users[req.session.userID];
   
@@ -246,6 +238,42 @@ app.get("/urls/new", (req, res) => {
   };
   res.render("urls_new", templateVars);
 });
+
+
+// GET / urls/:id
+app.get("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const url = urlDatabase[shortURL];
+  const userID = req.session.userID;
+
+  // Check if the user is logged in
+  if (!userID) {
+    res.status(401).send("You must be logged in to view this URL.");
+    return;
+  }
+
+  // Check if the URL exists
+  if (!url) {
+    res.status(404).send("URL not found");
+    return;
+  }
+
+
+  // Check if the URL belongs to the currently logged-in user
+  if (url.userID === req.session.userID) {
+    const templateVars = {
+      user: users[req.session.userID], // include the logged-in user in templateVars
+      urls: urlDatabase,
+      id: shortURL,
+      longURL: url.longURL,
+    };
+
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(403).send("You do not have permission to view this URL.");
+  }
+});
+
 
 // POST / urls/:id
 app.post("urls/:id", (req, res) => {
@@ -267,6 +295,7 @@ app.post("urls/:id", (req, res) => {
     return res.status(403).send("You do not have authorization to edit this.");
   }
 });
+
 
 // POST /urls/:id/delete
 app.post("/urls/:id/delete", (req, res) => {
@@ -324,39 +353,7 @@ app.post("/urls/:id/update", (req, res) => {
 });
 
 
-// GET / urls/:id
-app.get("/urls/:id", (req, res) => {
-  const shortURL = req.params.id;
-  const url = urlDatabase[shortURL];
-  const userID = req.session.userID;
-
-  // Check if the user is logged in
-  if (!userID) {
-    res.status(401).send("You must be logged in to view this URL.");
-    return;
-  }
-
-  // Check if the URL exists
-  if (!url) {
-    res.status(404).send("URL not found");
-    return;
-  }
-
-  // Check if the URL belongs to the currently logged-in user
-  if (url.userID === req.session.userID) {
-    const templateVars = {
-      user: users[req.session.userID], // include the logged-in user in templateVars
-      urls: urlDatabase,
-      id: shortURL,
-      longURL: url.longURL,
-    };
-
-    res.render("urls_show", templateVars);
-  } else {
-    res.status(403).send("You do not have permission to view this URL.");
-  }
-});
-
+// GET / u/:id
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
   const id = urlDatabase[shortURL];
