@@ -4,8 +4,8 @@ Do you tire of typing out very long boring websites into your browser? Well then
 
 ## Final Product
 
-!["screenshot description"](#)
-!["screenshot description"](#)
+![Screenshot of the login page](./docs/login_page.png)
+![Screenshot of the editing URLs page](./docs/edit_page.png)
 
 ## Dependencies
 
