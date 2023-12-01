@@ -15,13 +15,12 @@ const findUserWithEmail = (email, usersDatabase) => {
 };
 
 // Function to generate random ID's for URLS and users
-function generateRandomString() {
-  const id = Math.random().toString(36).substring(2, 5);
-  return id;
+const generateRandomString = () => {
+  return Math.random().toString(36).substring(2, 8);
 };
 
 // Function to filter URLs based on userID
-const urlsForUser = (id) => {
+const urlsForUser = (id, urlDatabase) => {
   const userUrls = {};
 
   for (const shortURL in urlDatabase) {
